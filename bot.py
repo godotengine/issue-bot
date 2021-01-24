@@ -209,6 +209,7 @@ class Bot:
                 "author_link": issue['html_url'],
                 "author_name": f"{repository.title()} [{issue_type}]: {issue['title']}  #{issue['number']}",
                 "text": status,
+                "ts": msg['ts'],
             })
 
         if not len(links):
