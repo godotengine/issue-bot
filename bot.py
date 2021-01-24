@@ -28,8 +28,6 @@ class Bot:
         self.token = None
         self.token_expires = None
         self.id = None
-        self.github_user = 'hpvb'
-        self.github_token = 'adfb08e8dcd36889fce347cd880900f4e6cd61f3'
 
         self.ws = websocket.WebSocketApp(ROCKET_WS_URL,
             on_message = lambda ws,msg: self.on_message(ws, msg),
