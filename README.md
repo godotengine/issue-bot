@@ -3,14 +3,14 @@
 Simple bot to ferry between rocket.chat and Github. If you want to run one for yourself you can build the container.
 The following environment variables are supported:
 
-`BOT_DEBUG` - Turn on exessive debug messages when set
-`DEFAULT_AVATAR_URL` - *required* url to some image if gh can't provide an avatar
-`ROCKET_WS_URL` - *required* url to the rocket.chat server (wss://chat.godotengine.org/websocket)
-`ROCKET_USERNAME` - *required* username of the rocket.chat user to login as
-`ROCKET_PASSWORD` - *required* password of the rocket.chat user
-`GITHUB_PROJECT` - *required* github project to search in
-`GITHUB_USERNAME` - *required* username to use for the github APIs
-`GITHUB_TOKEN` - *required* github user token to authenticate to the APIs with
+ * `BOT_DEBUG` - Turn on exessive debug messages when set
+ * `DEFAULT_AVATAR_URL` - *required* url to some image if gh can't provide an avatar
+ * `ROCKET_WS_URL` - *required* url to the rocket.chat server (wss://chat.godotengine.org/websocket)
+ * `ROCKET_USERNAME` - *required* username of the rocket.chat user to login as
+ * `ROCKET_PASSWORD` - *required* password of the rocket.chat user
+ * `GITHUB_PROJECT` - *required* github project to search in
+ * `GITHUB_USERNAME` - *required* username to use for the github APIs
+ * `GITHUB_TOKEN` - *required* github user token to authenticate to the APIs with
 
 ## Running without a container
 
