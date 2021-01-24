@@ -158,6 +158,16 @@ class Bot:
                         for reviewer in pr['requested_reviewers']:
                             reviewers.append(reviewer['login'])
                         pr_reviewers = ', '.join(reviewers)
+                    if 'requested_teams' in pr and pr['requested_teams']:
+                        teams = []
+                        for team in pr['requested_teams']:
+                            teams.append(f"team:{team['name']}")
+                        if pr_reviewers:
+                            pr_reviewers += ' and '
+                            pr_reviewers += ', '.join(teams)
+                        else:
+                            pr_reviewers = ', '.join(teams)
+
             else:
                 status = issue['state']
 
@@ -186,6 +196,7 @@ class Bot:
                             status += " [needs rebase]"
                     if pr_reviewers:
                         status += f" reviews required from {pr_reviewers}"
+                    
             else:
                 issue_type = "Issue"
                 status = f"Status: {status}"
