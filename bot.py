@@ -15,7 +15,7 @@ ROCKET_PASSWORD=os.environ.get('ROCKET_PASSWORD')
 GITHUB_PROJECT=os.environ.get('GITHUB_PROJECT')
 GITHUB_USERNAME=os.environ.get('GITHUB_USERNAME')
 GITHUB_TOKEN=os.environ.get('GITHUB_TOKEN')
-DEFAULT_AVATAR_URL=os.environe.get('DEFAULT_AVATAR_URL')
+DEFAULT_AVATAR_URL=os.environ.get('DEFAULT_AVATAR_URL')
 
 def debug_print(msg):
     if DEBUG:
