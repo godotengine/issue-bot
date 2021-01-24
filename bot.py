@@ -82,6 +82,7 @@ class Bot:
         self.send(subscribe_msg)
 
     def update_msg(self, msg):
+        debug_print("Updating message!")
         links = []
 
         for word in msg['msg'].split(' '):
@@ -90,6 +91,7 @@ class Bot:
 
             parts = word.split('#')
             if len(parts) != 2:
+                debug_print("Message doesn't have an issue tag")
                 continue
 
             issue = 0
@@ -97,95 +99,108 @@ class Bot:
             try:
                 issue = int(parts[1])
             except ValueError:
+                debug_print("Message doesn't have a valid issue number")
                 continue
 
             if issue < 100 and not repository:
+                debug_print("Message issue # too low for unprefixed issue")
                 continue
 
             if not repository:
                 repository = 'godot'
 
+            debug_print(f"Message contains issue for {repository}")
+
             headers = { 'User-Agent': 'Godot Issuebot by hpvb', }
-            r = requests.get(f"https://api.github.com/repos/{GITHUB_PROJECT}/{repository}/issues/{issue}", headers=headers, auth=(GITHUB_USERNAME, GITHUB_TOKEN))
-            if r.status_code == 200:
-                issue = r.json()
+            url = f"https://api.github.com/repos/{GITHUB_PROJECT}/{repository}/issues/{issue}"
+            debug_print(f"GitHub API request: {url}")
 
-                avatar_url = DEFAULT_AVATAR_URL
-                if 'avatar_url' in issue['user'] and issue['user']['avatar_url']:
-                    avatar_url = issue['user']['avatar_url']
-                if 'gravatar_id' in issue['user'] and issue['user']['gravatar_id']:
-                    avatar_url = f"https://www.gravatar.com/avatar/{issue['user']['gravatar_id']}"
+            r = requests.get(url, headers=headers, auth=(GITHUB_USERNAME, GITHUB_TOKEN))
+            if r.status_code != 200:
+                debug_print(f"Github API returned an error {r.status_code}")
+                debug_print(r.content)
+                continue
 
-                is_pr = False
-                pr_mergeable = None
-                pr_merged = None
-                pr_merged_by = None
-                pr_draft = False
-                pr_reviewers = None
-                status = None
-                closed_by = None
+            issue = r.json()
 
-                if 'pull_request' in issue and issue['pull_request']:
-                    is_pr = True
-                    prr = requests.get(issue['pull_request']['url'], headers=headers, auth=(GITHUB_USERNAME, GITHUB_TOKEN))
-                    if prr.status_code == 200:
-                        pr = prr.json()
-                        status = pr['state']
+            avatar_url = DEFAULT_AVATAR_URL
+            if 'avatar_url' in issue['user'] and issue['user']['avatar_url']:
+                avatar_url = issue['user']['avatar_url']
+            if 'gravatar_id' in issue['user'] and issue['user']['gravatar_id']:
+                avatar_url = f"https://www.gravatar.com/avatar/{issue['user']['gravatar_id']}"
 
-                        if 'merged_by' in pr and pr['merged_by']:
-                            pr_merged_by = pr['merged_by']['login']
-                        if 'mergeable' in pr:
-                            pr_mergeable = pr['mergeable']
-                        if 'merged' in pr:
-                            pr_merged = pr['merged']
-                        if 'draft' in pr:
-                            pr_draft = pr['draft']
-                        if 'requested_reviewers' in pr and pr['requested_reviewers']:
-                            reviewers = []
-                            for reviewer in pr['requested_reviewers']:
-                                reviewers.append(reviewer['login'])
-                            pr_reviewers = ', '.join(reviewers)
-                else:
-                    status = issue['state']
+            is_pr = False
+            pr_mergeable = None
+            pr_merged = None
+            pr_merged_by = None
+            pr_draft = False
+            pr_reviewers = None
+            status = None
+            closed_by = None
 
-                if status == 'closed':
-                    if 'closed_by' in issue and issue['closed_by']:
-                        closed_by = issue['closed_by']['login']
+            if 'pull_request' in issue and issue['pull_request']:
+                is_pr = True
+                debug_print(f"GitHub API request: {issue['pull_request']['url']}")
 
-                issue_type = None
+                prr = requests.get(issue['pull_request']['url'], headers=headers, auth=(GITHUB_USERNAME, GITHUB_TOKEN))
+                if prr.status_code == 200:
+                    pr = prr.json()
+                    status = pr['state']
 
-                if is_pr:
-                    issue_type = "Pull Request"
-                    if pr_merged:
-                        status = "PR merged"
-                        if pr_merged_by:
-                            status += f" by {pr_merged_by}"
-                    elif status == 'closed':
-                        status = "PR closed"
-                    elif not pr_merged:
-                        status = "PR open"
-                        if pr_draft:
-                            status += " [draft]"
-                        if pr_mergeable != None:
-                            if pr_mergeable:
-                                status += " [mergeable]"
-                            else:
-                                status += " [needs rebase]"
-                        if pr_reviewers:
-                            status += f" reviews required from {pr_reviewers}"
-                else:
-                    issue_type = "Issue"
-                    status = f"Status: {status}"
+                    if 'merged_by' in pr and pr['merged_by']:
+                        pr_merged_by = pr['merged_by']['login']
+                    if 'mergeable' in pr:
+                        pr_mergeable = pr['mergeable']
+                    if 'merged' in pr:
+                        pr_merged = pr['merged']
+                    if 'draft' in pr:
+                        pr_draft = pr['draft']
+                    if 'requested_reviewers' in pr and pr['requested_reviewers']:
+                        reviewers = []
+                        for reviewer in pr['requested_reviewers']:
+                            reviewers.append(reviewer['login'])
+                        pr_reviewers = ', '.join(reviewers)
+            else:
+                status = issue['state']
 
-                if not pr_merged and closed_by and status == 'closed':
-                    status += f" by {closed_by}"
+            if status == 'closed':
+                if 'closed_by' in issue and issue['closed_by']:
+                    closed_by = issue['closed_by']['login']
 
-                links.append({
-                    "author_icon": avatar_url,
-                    "author_link": issue['html_url'],
-                    "author_name": f"{repository.title()} [{issue_type}]: {issue['title']}  #{issue['number']}",
-                    "text": status,
-                })
+            issue_type = None
+
+            if is_pr:
+                issue_type = "Pull Request"
+                if pr_merged:
+                    status = "PR merged"
+                    if pr_merged_by:
+                        status += f" by {pr_merged_by}"
+                elif status == 'closed':
+                    status = "PR closed"
+                elif not pr_merged:
+                    status = "PR open"
+                    if pr_draft:
+                        status += " [draft]"
+                    if pr_mergeable != None:
+                        if pr_mergeable:
+                            status += " [mergeable]"
+                        else:
+                            status += " [needs rebase]"
+                    if pr_reviewers:
+                        status += f" reviews required from {pr_reviewers}"
+            else:
+                issue_type = "Issue"
+                status = f"Status: {status}"
+
+            if not pr_merged and closed_by and status == 'closed':
+                status += f" by {closed_by}"
+
+            links.append({
+                "author_icon": avatar_url,
+                "author_link": issue['html_url'],
+                "author_name": f"{repository.title()} [{issue_type}]: {issue['title']}  #{issue['number']}",
+                "text": status,
+            })
 
         if not len(links):
             return
