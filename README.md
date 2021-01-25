@@ -4,6 +4,8 @@ Simple bot to ferry between rocket.chat and Github. If you want to run one for y
 
 What does it do? It will add issue/pr links to messages that mention a valid issue. Either by typing `#1335` to go to the default repository or `repository#345` for a particular one. The bot will edit the message in question and add links, description, and status to the message.
 
+![screenshot](screenshot.png?raw=true "Screenshot")
+
 ## Environment variables
 The following environment variables are supported:
 
