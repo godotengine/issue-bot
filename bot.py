@@ -16,6 +16,7 @@ GITHUB_PROJECT=os.environ.get('GITHUB_PROJECT')
 GITHUB_USERNAME=os.environ.get('GITHUB_USERNAME')
 GITHUB_TOKEN=os.environ.get('GITHUB_TOKEN')
 DEFAULT_AVATAR_URL=os.environ.get('DEFAULT_AVATAR_URL')
+DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
 
 def debug_print(msg):
     if DEBUG:
@@ -105,7 +106,7 @@ class Bot:
                 continue
 
             if not repository:
-                repository = 'godot'
+                repository = DEFAULT_REPOSITORY
 
             debug_print(f"Message contains issue for {repository}")
 
