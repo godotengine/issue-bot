@@ -7,6 +7,7 @@ import websocket
 import json
 import os
 import time
+import re
 
 DEBUG=os.environ.get('BOT_DEBUG')
 ROCKET_WS_URL=os.environ.get('ROCKET_WS_URL')
@@ -17,6 +18,8 @@ GITHUB_USERNAME=os.environ.get('GITHUB_USERNAME')
 GITHUB_TOKEN=os.environ.get('GITHUB_TOKEN')
 DEFAULT_AVATAR_URL=os.environ.get('DEFAULT_AVATAR_URL')
 DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
+
+RE_MATCH = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
 
 def debug_print(msg):
     if DEBUG:
@@ -84,22 +87,11 @@ class Bot:
         debug_print("Updating message!")
         links = []
 
-        for word in msg['msg'].split(' '):
-            if not word.count('#'):
-                continue
+        for match in re.finditer(RE_MATCH, msg['msg']):
+            repository = match.group(1)
+            issue = int(match.group(2))
 
-            parts = word.split('#')
-            if len(parts) != 2:
-                debug_print("Message doesn't have an issue tag")
-                continue
-
-            issue = 0
-            repository = parts[0]
-            try:
-                issue = int(parts[1])
-            except ValueError:
-                debug_print("Message doesn't have a valid issue number")
-                continue
+            debug_print(f"Found repository: {repository} issue {issue}")
 
             if issue < 100 and not repository:
                 debug_print("Message issue # too low for unprefixed issue")
@@ -208,7 +200,7 @@ class Bot:
             links.append({
                 "author_icon": avatar_url,
                 "author_link": issue['html_url'],
-                "author_name": f"{repository.title()} [{issue_type}]: {issue['title']}  #{issue['number']}",
+                "author_name": f"{repository.title()} [{issue_type}]: {issue['title']} #{issue['number']}",
                 "text": status,
                 "ts": msg['ts'],
             })
@@ -229,7 +221,8 @@ class Bot:
 
         # Hack Hack, the clients won't update without a change to this field. Even if we add or remove attachments.
         msg['msg'] = msg['msg'] + " "
-        msg['attachments'].extend(links)
+
+        [msg['attachments'].append(x) for x in links if x not in msg['attachments']] 
 
         update_msg = {
             "msg": "method",
@@ -272,7 +265,8 @@ class Bot:
                 for chat_msg in decoded_msg['fields']['args']:
                     if 'editedBy' in chat_msg and chat_msg['editedBy']['_id'] == self.id:
                         continue
-                    if chat_msg['msg'].count('#'):
+                    if re.match(RE_MATCH, chat_msg['msg']):
+                        debug_print("Sending message to be update")
                         self.update_msg(chat_msg)
 
     def on_error(self, ws, error):
