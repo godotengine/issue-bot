@@ -22,6 +22,13 @@ DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
 RE_TAG_PROG = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
 RE_URL_PROG = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pulls)/(\d+)\S*')
 
+REPOSITORY_SHORT_NAMES = {
+    "assetlib": "godot-asset-library",
+    "demos": "godot-demo-projects",
+    "docs": "godot-docs",
+    "proposal": "godot-proposals",
+}
+
 def debug_print(msg):
     if DEBUG:
         print(msg)
@@ -236,6 +243,8 @@ class Bot:
 
             if not repository:
                 repository = DEFAULT_REPOSITORY
+            elif repository in REPOSITORY_SHORT_NAMES:
+                repository = REPOSITORY_SHORT_NAMES[repository]
 
             debug_print(f"Message contains issue for {repository}")
 
