@@ -278,12 +278,13 @@ class Bot:
         for link in links:
             link['ts'] = msg['ts'],
 
+        # Deduplicate links
         [msg['attachments'].append(x) for x in links if x not in msg['attachments']] 
 
         update_msg = {
             "msg": "method",
             "method": "updateMessage",
-            "id": "blah",
+            "id": "update-message",
             "params": [ msg ]
         }
         self.send(update_msg)
