@@ -4,12 +4,15 @@ Simple bot to ferry between rocket.chat and Github. If you want to run one for y
 
 What does it do? It will add issue/pr links to messages that mention a valid issue. Either by typing `#1335` to go to the default repository or `repository#345` for a particular one. The bot will edit the message in question and add links, description, and status to the message.
 
+Shortnames can be configured which could for instance map `proposals#1` to `godot-proposals#1` for commonly used repositories.
+
 ![screenshot](screenshot.png?raw=true "Screenshot")
 
 ## Environment variables
 The following environment variables are supported:
 
- * `BOT_DEBUG` - Turn on exessive debug messages when set
+ * `BOT_DEBUG` - *optional* Turn on exessive debug messages when set
+ * `REPOSITORY_SHORTNAME_MAP` - *optional* A space separated list form of `shortname:fullname ...` with repository shorthands and full names
  * `DEFAULT_AVATAR_URL` - *required* url to some image if gh can't provide an avatar
  * `DEFAULT_REPOSITORY` - *required* default repository to search if a 'bare' issue # gets sent
  * `ROCKET_WS_URL` - *required* url to the rocket.chat server (wss://chat.godotengine.org/websocket)
@@ -42,4 +45,5 @@ ROCKET_USERNAME=github
 ROCKET_PASSWORD=supersecret
 GITHUB_USERNAME=hpvb
 GITHUB_TOKEN=verysecret
+REPOSITORY_SHORTNAME_MAP="assetlib:godot-asset-library demos:godot-demo-projects docs:godot-docs proposals:godot-proposals"
 ```

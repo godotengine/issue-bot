@@ -18,9 +18,18 @@ GITHUB_USERNAME=os.environ.get('GITHUB_USERNAME')
 GITHUB_TOKEN=os.environ.get('GITHUB_TOKEN')
 DEFAULT_AVATAR_URL=os.environ.get('DEFAULT_AVATAR_URL')
 DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
+REPOSITORY_SHORTNAME_MAP=os.environ.get('REPOSITORY_SHORTNAME_MAP')
 
 RE_TAG_PROG = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
 RE_URL_PROG = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pulls)/(\d+)\S*')
+
+SHORTNAME_MAP={}
+for item in re.sub('\s+', ' ', REPOSITORY_SHORTNAME_MAP).split(' '):
+    split = item.split(':')
+    if len(split) != 2:
+        continue
+
+    SHORTNAME_MAP[split[0]] = split[1]
 
 def debug_print(msg):
     if DEBUG:
@@ -236,6 +245,10 @@ class Bot:
 
             if not repository:
                 repository = DEFAULT_REPOSITORY
+
+            if repository in SHORTNAME_MAP:
+                debug_print(f"Found repository: {repository} in shortname map. Replacing with {SHORTNAME_MAP[repository]}")
+                repository = SHORTNAME_MAP[repository]
 
             debug_print(f"Message contains issue for {repository}")
 
