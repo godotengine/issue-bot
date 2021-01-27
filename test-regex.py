@@ -27,8 +27,8 @@ tests = [
     { 'text': '(repo#100) text', 'results' : [ makeurl(100, 'repo') ] },
 
     { 'text': 'https://github.com/godotengine/issue-bot/issues/2', 'results': [ makeurl(2, 'issue-bot') ] },
-    { 'text': 'https://github.com/godotengine/godot/pulls/100', 'results': [ makeurl(100) ] },
-    { 'text': 'https://github.com/godotengine/godot/pulls/100#issuecomment-1', 'results': [ makeurl(100) ] },
+    { 'text': 'https://github.com/godotengine/godot/pull/100', 'results': [ makeurl(100) ] },
+    { 'text': 'https://github.com/godotengine/godot/pull/100#issuecomment-1', 'results': [ makeurl(100) ] },
 
     { 'text': 'a long line of text with an url https://github.com/godotengine/godot/issues/100 and some tags #102 repo#103', 'results': [ makeurl(102), makeurl(103, 'repo'), makeurl(100) ] },
 
@@ -37,7 +37,7 @@ tests = [
 ]
 
 tag_prog = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
-url_prog = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pulls)/(\d+)\S*')
+url_prog = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pull)/(\d+)\S*')
 for test in tests:
     text = test['text']
     result = []

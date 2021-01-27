@@ -21,7 +21,7 @@ DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
 REPOSITORY_SHORTNAME_MAP=os.environ.get('REPOSITORY_SHORTNAME_MAP')
 
 RE_TAG_PROG = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
-RE_URL_PROG = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pulls)/(\d+)\S*')
+RE_URL_PROG = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pull)/(\d+)\S*')
 
 SHORTNAME_MAP={}
 for item in re.sub('\s+', ' ', REPOSITORY_SHORTNAME_MAP).split(' '):
