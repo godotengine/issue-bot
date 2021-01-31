@@ -21,7 +21,7 @@ DEFAULT_REPOSITORY=os.environ.get('DEFAULT_REPOSITORY')
 REPOSITORY_SHORTNAME_MAP=os.environ.get('REPOSITORY_SHORTNAME_MAP')
 
 RE_TAG_PROG = re.compile('([A-Za-z0-9_.-]+)?#(\d+)')
-RE_URL_PROG = re.compile('github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pull)/(\d+)\S*')
+RE_URL_PROG = re.compile('(https?://)?github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/(issues|pull)/(\d+)(\S*)')
 
 SHORTNAME_MAP={}
 for item in re.sub('\s+', ' ', REPOSITORY_SHORTNAME_MAP).split(' '):
@@ -93,7 +93,7 @@ class Bot:
         }
         self.send(subscribe_msg)
 
-    def format_issue(self, repository, issue):
+    def format_issue(self, repository, issue, add_issue_link):
         headers = { 'User-Agent': 'Godot Issuebot by hpvb', }
         url = f"https://api.github.com/repos/{GITHUB_PROJECT}/{repository}/issues/{issue}"
         debug_print(f"GitHub API request: {url}")
@@ -189,15 +189,21 @@ class Bot:
         if not pr_merged and closed_by and status == 'closed':
             status += f" by {closed_by}"
 
-        return {
+        retval = {
             "author_icon": avatar_url,
             "author_link": issue['html_url'],
             "author_name": f"{repository.title()} [{issue_type}]: {issue['title']} #{issue['number']}",
             "text": status,
         }
 
+        if not add_issue_link:
+            retval.pop('author_link', None)
+
+        return retval
+
     def replace_issue_tags(self, msg):
         debug_print("Updating message!")
+        add_issue_link = True
         links = []
 
         # First replace all the full links that rocket.chat has detected with tags
@@ -205,11 +211,12 @@ class Bot:
             urls_to_keep = []
             for url in msg['urls']:
                 debug_print(f"URL: {url['url']}")
-                if f'github.com/{GITHUB_PROJECT}' in url['url']:
+                match = re.search(RE_URL_PROG, url['url'])
+                if match and not match.group(6).startswith('#') and not match.group(6).startswith('/'):
 
                     match = re.search(RE_URL_PROG, url['url'])
-                    repository = match.group(2)
-                    issue = int(match.group(4))
+                    repository = match.group(3)
+                    issue = int(match.group(5))
 
                     tag = f'{repository}#{issue}'
                     debug_print(f"Replacing url {url['url']} with {tag}")
@@ -222,14 +229,17 @@ class Bot:
 
         # Then we replace all of the part-urls with tags as well
         for match in re.finditer(RE_URL_PROG, msg['msg']):
-            project = match.group(1)
-            repository = match.group(2)
-            issue = match.group(4)
+            project = match.group(2)
+            repository = match.group(3)
+            issue = match.group(5)
 
             tag = f'{repository}#{issue}'
             if project == GITHUB_PROJECT:
-                print('DEBUG: ' + match.group(0))
-                msg['msg'] = msg['msg'].replace(match.group(0), tag)
+                if (match.group(6).startswith('#') or match.group(6).startswith('/')) and not tag in msg['msg']:
+                    msg['msg'] = msg['msg'].replace(match.group(0), f'{match.group(0)} ({tag})')
+                    add_issue_link = False
+                else:
+                    msg['msg'] = msg['msg'].replace(match.group(0), tag)
 
         # Then finally add the metadata for all our tags
         debug_print("Scanning message for tags")
@@ -252,10 +262,9 @@ class Bot:
 
             debug_print(f"Message contains issue for {repository}")
 
-            link = self.format_issue(repository, issue)
+            link = self.format_issue(repository, issue, add_issue_link)
             if link:
                 links.append(link)
-
 
         if not len(links):
             return
@@ -266,8 +275,10 @@ class Bot:
         # We may be editing, remove all the github attachments
         old_attachments = []
         for attachment in msg['attachments']:
-            if not attachment['author_link'].startswith(f'https://github.com/{GITHUB_PROJECT}'):
-                old_attachments.append(attachment)
+            if 'author_icon' in attachment:
+                continue
+
+            old_attachments.append(attachment)
 
         msg['attachments'] = old_attachments
 
